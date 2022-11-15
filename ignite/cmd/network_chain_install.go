@@ -24,12 +24,13 @@ func NewNetworkChainInstall() *cobra.Command {
 
 	flagSetClearCache(c)
 	c.Flags().AddFlagSet(flagNetworkFrom())
+	c.Flags().AddFlagSet(flagSetCheckDependencies())
 	return c
 }
 
 func networkChainInstallHandler(cmd *cobra.Command, args []string) error {
-	session := cliui.New()
-	defer session.Cleanup()
+	session := cliui.New(cliui.StartSpinner())
+	defer session.End()
 
 	cacheStorage, err := newCache(cmd)
 	if err != nil {
@@ -57,7 +58,13 @@ func networkChainInstallHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	c, err := nb.Chain(networkchain.SourceLaunch(chainLaunch))
+	var networkOptions []networkchain.Option
+
+	if flagGetCheckDependencies(cmd) {
+		networkOptions = append(networkOptions, networkchain.CheckDependencies())
+	}
+
+	c, err := nb.Chain(networkchain.SourceLaunch(chainLaunch), networkOptions...)
 	if err != nil {
 		return err
 	}
@@ -68,7 +75,6 @@ func networkChainInstallHandler(cmd *cobra.Command, args []string) error {
 	}
 	binaryPath := filepath.Join(goenv.Bin(), binaryName)
 
-	session.StopSpinner()
 	session.Printf("%s Binary installed\n", icons.OK)
 	session.Printf("%s Binary's name: %s\n", icons.Info, colors.Info(binaryName))
 	session.Printf("%s Binary's path: %s\n", icons.Info, colors.Info(binaryPath))

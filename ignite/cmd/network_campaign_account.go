@@ -7,9 +7,7 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cliui/icons"
 )
 
-var (
-	campaignMainnetsAccSummaryHeader = []string{"Mainnet Account", "Shares"}
-)
+var campaignMainnetsAccSummaryHeader = []string{"Mainnet Account", "Shares"}
 
 // NewNetworkCampaignAccount creates a new campaign account command that holds some other
 // sub commands related to account for a campaign.
@@ -35,13 +33,14 @@ func newNetworkCampaignAccountList() *cobra.Command {
 }
 
 func newNetworkCampaignAccountListHandler(cmd *cobra.Command, args []string) error {
-	session := cliui.New()
-	defer session.Cleanup()
+	session := cliui.New(cliui.StartSpinner())
+	defer session.End()
 
 	nb, campaignID, err := networkChainLaunch(cmd, args, session)
 	if err != nil {
 		return err
 	}
+
 	n, err := nb.Network()
 	if err != nil {
 		return err
@@ -54,8 +53,7 @@ func newNetworkCampaignAccountListHandler(cmd *cobra.Command, args []string) err
 	}
 
 	if len(mainnetAccs) == 0 {
-		session.StopSpinner()
-		return session.Printf("%s %s\n", icons.Info, "no campaign account found")
+		return session.Printf("%s no campaign account found\n", icons.Info)
 	}
 
 	mainnetAccEntries := make([][]string, 0)
@@ -63,7 +61,6 @@ func newNetworkCampaignAccountListHandler(cmd *cobra.Command, args []string) err
 		mainnetAccEntries = append(mainnetAccEntries, []string{acc.Address, acc.Shares.String()})
 	}
 
-	session.StopSpinner()
 	if len(mainnetAccEntries) > 0 {
 		if err = session.PrintTable(campaignMainnetsAccSummaryHeader, mainnetAccEntries...); err != nil {
 			return err

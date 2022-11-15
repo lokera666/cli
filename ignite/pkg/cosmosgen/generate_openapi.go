@@ -22,8 +22,6 @@ var openAPIOut = []string{
 const specCacheNamespace = "generate.openapi.spec"
 
 func generateOpenAPISpec(g *generator) error {
-	out := filepath.Join(g.appPath, g.o.specOut)
-
 	var (
 		specDirs []string
 		conf     = swaggercombine.Config{
@@ -65,7 +63,7 @@ func generateOpenAPISpec(g *generator) error {
 		}
 
 		if err != cache.ErrorNotFound {
-			if err := os.WriteFile(specPath, existingSpec, 0644); err != nil {
+			if err := os.WriteFile(specPath, existingSpec, 0o644); err != nil {
 				return err
 			}
 		} else {
@@ -125,6 +123,8 @@ func generateOpenAPISpec(g *generator) error {
 		}
 	}
 
+	out := g.o.specOut
+
 	if !hasAnySpecChanged {
 		// In case the generated output has been changed
 		changed, err := dirchange.HasDirChecksumChanged(specCache, out, g.appPath, out)
@@ -141,7 +141,7 @@ func generateOpenAPISpec(g *generator) error {
 
 	// ensure out dir exists.
 	outDir := filepath.Dir(out)
-	if err := os.MkdirAll(outDir, 0766); err != nil {
+	if err := os.MkdirAll(outDir, 0o766); err != nil {
 		return err
 	}
 
